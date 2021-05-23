@@ -1,46 +1,47 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net"
 	"os"
+
+	"github.com/maitesin/echo/config"
+	"github.com/maitesin/echo/internal/app"
+	"github.com/maitesin/echo/internal/infra"
+	log "github.com/sirupsen/logrus" //nolint: depguard
+)
+
+const (
+	exitStatusFailedConfiguration int = iota + 1
+	exitStatusFailedListen
+	exitStatusFailedAccept
 )
 
 func main() {
-	ln, err := net.Listen("tcp", "127.0.0.1:7")
+	logger := log.New()
+	logger.SetFormatter(&log.JSONFormatter{})
+
+	cfg, err := config.New(os.Args[0], os.Args[1:])
 	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+		logger.Println(err)
+		os.Exit(exitStatusFailedConfiguration)
 	}
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			log.Println(err)
-			os.Exit(1)
-		}
-		go handleConnection(conn)
+
+	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", cfg.Host, cfg.Port))
+	if err != nil {
+		logger.Println(err)
+		os.Exit(exitStatusFailedListen)
 	}
-}
 
-func handleConnection(conn net.Conn) {
-	defer conn.Close()
-	buffer := make([]byte, 100)
+	logger.WithFields(log.Fields{
+		"port":        cfg.Port,
+		"host":        cfg.Host,
+		"buffer-size": cfg.BufferSize,
+	}).Println("Echo server started")
 
-	for {
-		sizeRead, err := conn.Read(buffer)
-		if err != nil {
-			return
-		}
-		sizeWritten, err := conn.Write(buffer[:sizeRead])
-		if err != nil {
-			return
-		}
-		for sizeWritten != sizeRead {
-			moreWritten, err := conn.Write(buffer[sizeWritten:sizeRead])
-			if err != nil {
-				return
-			}
-			sizeWritten += moreWritten
-		}
+	err = infra.ConnectionsHandler(logger, ln, app.EchoHandler(cfg.BufferSize))
+	if err != nil {
+		logger.Println(err)
+		os.Exit(exitStatusFailedAccept)
 	}
 }
