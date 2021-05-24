@@ -30,11 +30,11 @@ func validReadWriteCloser() *ReadWriteCloserMock {
 
 type readWriteCloserMutator func(app.ReadWriteCloser) app.ReadWriteCloser
 
-func noopeReadWriteCloserMutator(readWriteCloser app.ReadWriteCloser) app.ReadWriteCloser {
+func noopReadWriteCloserMutator(readWriteCloser app.ReadWriteCloser) app.ReadWriteCloser {
 	return readWriteCloser
 }
 
-func TestConnectionHandler(t *testing.T) {
+func TestEchoHandler(t *testing.T) {
 	const bufferSize = 5
 	testLogger := log.New().WithFields(log.Fields{})
 
@@ -43,11 +43,15 @@ func TestConnectionHandler(t *testing.T) {
 		readWriteCloserMutator readWriteCloserMutator
 	}{
 		{
-			name:                   ``,
-			readWriteCloserMutator: noopeReadWriteCloserMutator,
+			name: `Given a valid read write closer,
+                   when the echo handler is called,
+                   then echos the data provided and finishes when the read returns an EOF`,
+			readWriteCloserMutator: noopReadWriteCloserMutator,
 		},
 		{
-			name: ``,
+			name: `Given a valid read write closer,
+                   when the echo handler is called,
+                   then echos the data provided, with multiple writes, and finishes when the read returns an EOF`,
 			readWriteCloserMutator: func(app.ReadWriteCloser) app.ReadWriteCloser {
 				conn := validReadWriteCloser()
 
@@ -67,7 +71,9 @@ func TestConnectionHandler(t *testing.T) {
 			},
 		},
 		{
-			name: ``,
+			name: `Given a failing read write closer that fails when reading from it,
+                   when the echo handler is called,
+                   then fails to read data and logs that the connection failed`,
 			readWriteCloserMutator: func(app.ReadWriteCloser) app.ReadWriteCloser {
 				conn := validReadWriteCloser()
 
@@ -79,7 +85,9 @@ func TestConnectionHandler(t *testing.T) {
 			},
 		},
 		{
-			name: ``,
+			name: `Given a failing read write closer that fails when writing the first time to it,
+                   when the echo handler is called,
+                   then fails to write data an logs that the connection failed`,
 			readWriteCloserMutator: func(app.ReadWriteCloser) app.ReadWriteCloser {
 				conn := validReadWriteCloser()
 
@@ -91,7 +99,9 @@ func TestConnectionHandler(t *testing.T) {
 			},
 		},
 		{
-			name: ``,
+			name: `Given a failing read write closer that fails when writing the second time to it,
+                   when the echo handler is called,
+                   then fails to write data an logs that the connection failed`,
 			readWriteCloserMutator: func(app.ReadWriteCloser) app.ReadWriteCloser {
 				conn := validReadWriteCloser()
 

@@ -27,11 +27,15 @@ func TestNew(t *testing.T) {
 		expectedErr   error
 	}{
 		{
-			name:          ``,
+			name: `Given an empty list of arguments,
+                   when the new configuration function is called,
+                   then uses the default values for the application`,
 			configMutator: noopConfigMutator,
 		},
 		{
-			name: ``,
+			name: `Given a valid list of arguments with all arguments available present,
+                   when the new configuration function is called,
+                   then uses the values provided in the arguments for the application`,
 			args: []string{"-port", "7000", "-host", "0.0.0.0", "-buffer-size", "1024"},
 			configMutator: func(cfg config.Config) config.Config {
 				cfg.Port = 7000
@@ -41,19 +45,25 @@ func TestNew(t *testing.T) {
 			},
 		},
 		{
-			name:          ``,
+			name: `Given an invalid list of arguments,
+                   when the new configuration function is called,
+                   then returns a parsing configuration error`,
 			args:          []string{"-wololo"},
 			configMutator: noopConfigMutator,
 			expectedErr:   config.ParseConfigError{},
 		},
 		{
-			name:          ``,
+			name: `Given a valid list of arguments, but with an invalid value used for the port argument,
+                   when the new configuration function is called,
+                   then returns an invalid configuration error`,
 			args:          []string{"-port", "-10"},
 			configMutator: noopConfigMutator,
 			expectedErr:   config.InvalidConfigError{},
 		},
 		{
-			name:          ``,
+			name: `Given a valid list of arguments, but with an invalid value used for the buffer size argument,
+                   when the new configuration function is called,
+                   then returns an invalid configuration error`,
 			args:          []string{"-buffer-size", "-10"},
 			configMutator: noopConfigMutator,
 			expectedErr:   config.InvalidConfigError{},

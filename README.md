@@ -48,3 +48,22 @@ In order to run the unit test you just need the following command:
 ```bash
 make test
 ```
+
+## Usage
+
+Once the echo project is running and listening for connections. You can connect to it using `netcat`, among other. You will need to kill the `netcat` application when you want to finish the echo process. Because while the connection is still open the echo project will not close it from its side.
+
+```bash
+$ nc localhost 7
+Hello!  
+Hello!
+Bye!
+Bye!
+```
+
+You can also add a deadline to the `netcat` execution, and it will close the connection when the deadline is reached.
+
+```bash
+$ echo 'Hello!' | nc -q 1 localhost 7
+Hello!
+```
